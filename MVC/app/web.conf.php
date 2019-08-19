@@ -1,0 +1,17 @@
+<?php
+return array(
+    'data' => array(
+        'web_name' => '亚博',
+        'navs' => array(array('type'=>'棋牌游戏', 'list'=>array(array('name'=>'AS', 'group'=>'真人棋牌', 'url'=>'test_as'), array('name'=>'DT', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'欢乐', 'group'=>'棋牌', 'url'=>'test_hl'), array('name'=>'开源', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'761', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'AG旗舰', 'group'=>'棋牌', 'url'=>'test_dt'))),
+            array('type'=>'百家乐', 'list'=>array(array('name'=>'AS', 'group'=>'真人棋牌', 'url'=>'test_as'), array('name'=>'DT', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'欢乐', 'group'=>'棋牌', 'url'=>'test_hl'), array('name'=>'开源', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'761', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'AG旗舰', 'group'=>'棋牌', 'url'=>'test_dt'))),
+            array('type'=>'老虎机', 'list'=>array(array('name'=>'AS', 'group'=>'真人棋牌', 'url'=>'test_as'), array('name'=>'DT', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'欢乐', 'group'=>'棋牌', 'url'=>'test_hl'), array('name'=>'开源', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'761', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'AG旗舰', 'group'=>'棋牌', 'url'=>'test_dt'))),
+            array('type'=>'体育竞技', 'list'=>array(array('name'=>'AS', 'group'=>'真人棋牌', 'url'=>'test_as'), array('name'=>'DT', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'欢乐', 'group'=>'棋牌', 'url'=>'test_hl'), array('name'=>'开源', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'761', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'AG旗舰', 'group'=>'棋牌', 'url'=>'test_dt'))),
+            array('type'=>'捕鱼游戏', 'list'=>array(array('name'=>'AS', 'group'=>'真人棋牌', 'url'=>'test_as'), array('name'=>'DT', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'欢乐', 'group'=>'棋牌', 'url'=>'test_hl'), array('name'=>'开源', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'761', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'AG旗舰', 'group'=>'棋牌', 'url'=>'test_dt'))),
+            array('type'=>'最新优惠', 'list'=>array(array('name'=>'AS', 'group'=>'真人棋牌', 'url'=>'test_as'), array('name'=>'DT', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'欢乐', 'group'=>'棋牌', 'url'=>'test_hl'), array('name'=>'开源', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'761', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'AG旗舰', 'group'=>'棋牌', 'url'=>'test_dt'))),
+            array('type'=>'积分商城', 'list'=>array(array('name'=>'AS', 'group'=>'真人棋牌', 'url'=>'test_as'), array('name'=>'DT', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'欢乐', 'group'=>'棋牌', 'url'=>'test_hl'), array('name'=>'开源', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'761', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'AG旗舰', 'group'=>'棋牌', 'url'=>'test_dt'))),
+            array('type'=>'下载中心', 'list'=>array(array('name'=>'AS', 'group'=>'真人棋牌', 'url'=>'test_as'), array('name'=>'DT', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'欢乐', 'group'=>'棋牌', 'url'=>'test_hl'), array('name'=>'开源', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'761', 'group'=>'棋牌', 'url'=>'test_dt'), array('name'=>'AG旗舰', 'group'=>'棋牌', 'url'=>'test_dt')))
+        ),
+        'banners' => array('img/anniversary.jpg', 'img/anniversary.jpg', 'img/anniversary.jpg'),
+        'announcement' => array('8月收款银行账户停用公告', '广发银行收款账户【喻佳华】停用公告', '光大银行收款账户【王东】停用公告', '8月3日高额存送活动公告', '广发银行收款账户【喻佳华】停用公告', '光大银行收款账户【王东】停用公告', '8月3日高额存送活动公告')
+    ),
+);
