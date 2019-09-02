@@ -1,6 +1,8 @@
 # Discuz--
 Discuz 特殊主题+Canvas游戏插件开发
 
+pre_plugin_transaction：
+
   名字	类型	排序规则	属性	空	默认	注释	额外
   
   id主键	int(8)			否	无		AUTO_INCREMENT
