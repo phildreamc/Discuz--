@@ -1,0 +1,716 @@
+<!--{block return}-->
+<!--{template common/header}-->
+<!--{if $_GET['mobile'] && $_GET['mobile'] == 'no'}-->
+<script>
+var f = document.getElementById('nv_plugin');
+var z = document.getElementById('hd');
+f.removeChild(z);
+</script>
+<!--{/if}-->
+<canvas id="canvas">
+</canvas>
+<script src="./source/plugin/transaction/websocket.js"></script>
+<script src="./source/plugin/transaction/CanvasInput.js"></script>
+<script>
+var info = {
+    img:null,
+    img_w:40,
+    name:"{$_G['username']}",
+    uid:"{$_G['uid']}",
+    count:'{$score}',
+    token:"{$token}"
+};
+var table = {
+    number:12,
+    table_img:'./source/plugin/transaction/table.png',
+    table_a:'./source/plugin/transaction/table_a.png',
+    bench_l_img:'./source/plugin/transaction/bench_l.png',
+    bench_r_img:'./source/plugin/transaction/bench_r.png',
+    win:'./source/plugin/transaction/win.png',
+    lose:'./source/plugin/transaction/lose.png',
+    x:'./source/plugin/transaction/x.png',
+    k:'./source/plugin/transaction/k.png',
+    he:'./source/plugin/transaction/h.jpg',
+    sub:'./source/plugin/transaction/sub.png',
+    sub_a:'./source/plugin/transaction/sub_a.png',
+    w:320,
+    h:150,
+    tables:new Array()
+};
+var room = new Array();
+var sub = null;
+var sub_a = null;
+var sub_button = false;
+var txt = new Array();
+for (i = 0; i < 26+1; i++){
+    txt[i] = '';
+}
+//游戏界面图片截图
+var pics = {
+    ob:null,
+    src:'./source/plugin/transaction/pics.png',
+    box:{
+        x:0,
+        y:0,
+        w:120,
+        h:123
+    },
+    box_a:{
+        x:128,
+        y:0,
+        w:125,
+        h:123
+    },
+    box_h:{
+        x:50,
+        y:156,
+        w:460,
+        h:160
+    },
+    box_o:{
+        x:200,
+        y:123,
+        w:40,
+        h:35
+    },
+    map:{
+        x:0,
+        y:320,
+        w:480,
+        h:360
+    }
+};
+//游戏截图图片位置
+var game = {
+    box_1:{
+        x:350,
+        y:480
+    },
+    box_2:{
+        x:650,
+        y:480
+    },
+    box_3:{
+        x:950,
+        y:480
+    },
+    map:{
+        x:500,
+        y:150
+    }
+};
+var score = {
+    f:1,
+    l:0,
+    r:3
+}
+var bet = 0;
+var canvas = document.getElementById('canvas');
+var c = canvas.getContext("2d");
+var W = canvas.width = 1200;
+var H = canvas.height = 680;
+var header_h = 50;
+var chatarea_w = 240;
+var isfirst = false;
+var round = false;
+var active = null;
+var active_b = null;//活跃桌子
+var open = null;//选择的宝箱
+var in_game = false;//活跃宝箱
+var step; //游戏进度 
+var open = null;
+var result = false;
+var enemy;
+var s = {
+    x:0,
+    y:header_h
+};
+var e = {
+    x:W,
+    y:header_h
+};
+var ob_x = null;
+var ob_k = null;
+var input;
+
+ui();
+<!-- animate(); -->
+start();
+function start() {
+    canvas.addEventListener("mousemove",doMouseMove,false);
+    canvas.addEventListener("mousedown",doMouseDown,false);
+}
+function join() {
+    if (active != null) {
+        send(en('sys', 'join', active.toString()));
+    }
+}
+function doMouseMove(e) {
+    if (in_game) {
+        if (step == 'hide' || step == 'open') {
+            if (e.layerX > game.box_1.x && e.layerX < game.box_1.x + pics.box.w && e.layerY > game.box_1.y && e.layerY < game.box_1.y + pics.box.h) {
+                var now_b = 1;
+            }else if (e.layerX > game.box_2.x && e.layerX < game.box_2.x + pics.box.w && e.layerY > game.box_2.y && e.layerY < game.box_2.y + pics.box.h) {
+                var now_b = 2;
+            }else if (e.layerX > game.box_3.x && e.layerX < game.box_3.x + pics.box.w && e.layerY > game.box_3.y && e.layerY < game.box_3.y + pics.box.h) {
+                var now_b = 3;
+            }else{
+                var now_b = null;
+            }
+            if (now_b != active_b){
+                active_b = now_b;
+                game_refresh();
+            }
+        }
+        return false;
+    }
+    if (step != 'reconn') {
+        if (e.layerX > chatarea_w && e.layerY > header_h && e.layerX < chatarea_w + table.w*3 && e.layerY < table.h*4) {
+            var tables_x = e.layerX - chatarea_w;
+            var tables_y = e.layerY - header_h;
+            var table_n = parseInt(tables_x/table.w) + parseInt(tables_y/table.h)*3;
+            var table_x = e.layerX%table.w;
+            var now = table_n;
+        }else {
+            var now = null;
+        }
+        checkactive(now);
+    }
+    if (e.layerX > chatarea_w - 100 + 22 && e.layerX < chatarea_w - 100 + 22 + 80 && e.layerY > H - 45 && e.layerY < H - 45 + 50) {
+        sub_n = true;
+    }else {
+        sub_n = false;
+    }
+    if (sub_n != sub_button){
+        sub_button = sub_n;
+        fillRect(chatarea_w - 100 + 22, H - 45, 80, 50, '#3f749e');
+        if (sub_button) {
+            draw_img(sub, table.sub_a, chatarea_w - 100 + 22, H - 45, 80, 50);
+        }else {
+            draw_img(sub, table.sub, chatarea_w - 100 + 22, H - 45, 80, 50);
+        }
+        
+    }
+}
+function doMouseDown(e) {
+    if (sub_button) {
+        input.onsubmit();
+    }
+    if (in_game && step != 'wait') {
+        if (active_b && step == "hide") {
+            send(en('sys', 'hide', active_b.toString()));
+        }
+        if (active_b && step == "open") {
+            send(en('sys', 'open', active_b.toString()));
+        }
+        <!-- game_refresh(); -->
+        return false;
+    }
+    if (step != 'wait') {
+        join();
+    }
+}
+function checkactive(n){
+    if (n != active) {
+        changeactive(active, n);
+        active = n;
+    }
+}
+function changeactive(b, n){
+    if (b != null) {
+        var x = chatarea_w + table.w/4+ table.w*(b%3);
+        var y = header_h + table.h*(parseInt(b/3));
+        <!-- c.clearRect(x, y, table.w/2, table.h); -->
+        <!-- fillRect(x, y, table.w/2, table.h, '#042f51'); -->
+        draw_img(table.tables[b].table, table.table_img, x, y, table.w/2, table.h);
+    }
+    
+    if (n != null) {
+        var x_n = chatarea_w + table.w/4+ table.w*(n%3);
+        var y_n = header_h + table.h*(parseInt(n/3));
+        draw_img(table.tables[n].table, table.table_a, x_n, y_n, table.w/2, table.h);
+    }
+}
+function ui() {
+    fillRect(0, 0, W, H, '#000');//背景色
+    fillRect(0, 0, W, header_h, '#00223b');//头背景
+    fillLine(s, e, 1.0, '#000000');
+    fillRect(0, header_h, W, H - header_h, '#042f51');//桌面背景
+    fillRect(0, header_h, chatarea_w, H - header_h, '#3f749e');//聊天背景
+    load_info();
+    all_table(table.number);
+    input = new CanvasInput({
+      canvas: document.getElementById('canvas'),
+      fontSize: 18,
+      fontFamily: 'Arial',
+      fontColor: '#212121',
+      fontWeight: 'bold',
+      width: chatarea_w - 100,
+      x:2,
+      y:H - 40,
+      padding: 8,
+      borderWidth: 1,
+      borderColor: '#000',
+      borderRadius: 3,
+      boxShadow: '1px 1px 0px #fff',
+      innerShadow: '0px 0px 5px rgba(0, 0, 0, 0.5)',
+      placeHolder: '请输入',
+      onsubmit:function() {
+        if (this._value == ''){
+            <!-- showDialog('发送内容不能为空！', 'notice', '提示'); -->
+            return false;
+        }
+        if (strlen(this._value) > 10) {
+            showDialog('内容太长啦！', 'notice', '提示');
+            return false
+        }
+        send(en('msg', 'all', this._value));
+        this._hiddenInput.value = '';
+      }
+    });
+    show_txt();
+    draw_img(sub, table.sub, chatarea_w - 100 + 22, H - 45, 80, 50);
+}
+function game_ui() {
+    in_game = true;
+    fillRect(chatarea_w, header_h, W - chatarea_w, H - header_h, '#000');
+    fillText('加载中……', chatarea_w + (W - chatarea_w)/2, header_h + (H - header_h)/2);
+    pics.ob = new Image();
+    pics.ob.src = pics.src;
+    pics.ob.onload = function () {
+        game_refresh();
+    }
+}
+function reroom(){
+    ui();
+}
+function game_refresh(){
+    fillRect(chatarea_w, header_h, W - chatarea_w, H - header_h, '#000');
+    <!-- c.drawImage(pics.ob, pics.map.x, pics.map.y, pics.map.w, pics.map.h, game.map.x, game.map.y, pics.map.w, pics.map.h); -->
+    fillText("赌注：" + bet, chatarea_w + 10, header_h + 25, "#FFD700", "15px DejaVu Sans Mono");
+    if (isfirst) {
+        l_t = '我方';
+        r_t = '敌方';
+    }else {
+        l_t = '敌方';
+        r_t = '我方';
+    }
+    var t = l_t + " " + score.f;
+    t += ":";
+    t += score.l;
+    t = t + " " + r_t;
+    fillText(t, chatarea_w + (W - chatarea_w)/2 - 75, header_h + 25);
+    fillText("ROUND:" + score.r, W - 100, header_h + 25, "#FFD700", "15px DejaVu Sans Mono");
+    if (step == 'hide') {
+        c.drawImage(pics.ob, pics.map.x, pics.map.y, pics.map.w, pics.map.h, game.map.x, game.map.y, pics.map.w, pics.map.h);
+        fillText("请开始藏宝！藏在哪里才他才会猜错呢？", chatarea_w + (W - chatarea_w)/2 - 155, header_h + 80);
+    }
+    if (step == 'wait_o') {
+        fillText(enemy + "正在寻宝……", chatarea_w + (W - chatarea_w)/2 - 105, header_h + 280);
+        fillText("已经藏好啦，祈祷敌方千万不要猜到吧！", chatarea_w + (W - chatarea_w)/2 - 155, header_h + 80);
+    }
+    if (step == 'wait_h') {
+        fillText(enemy + "正在藏宝……", chatarea_w + (W - chatarea_w)/2 - 105, header_h + 280);
+        fillText("请等待敌方藏宝！他会藏在哪个箱子呢？", chatarea_w + (W - chatarea_w)/2 - 155, header_h + 80);
+    }
+    if (step == 'open') {
+        c.drawImage(pics.ob, pics.map.x, pics.map.y, pics.map.w, pics.map.h, game.map.x, game.map.y, pics.map.w, pics.map.h);
+        fillText("对方已藏宝，请预测对方藏在哪个宝箱！", chatarea_w + (W - chatarea_w)/2 - 155, header_h + 80);
+    }
+    if (step == 'result' && !round && result) {
+        draw_img(ob_x, table.x, game.map.x, game.map.y, pics.map.w, pics.map.h);
+        fillText("料事如神!祝贺你找到了对方藏的宝藏！", chatarea_w + (W - chatarea_w)/2 - 155, header_h + 80);
+    }
+    if (step == 'result' && !round && !result) {
+        draw_img(ob_k, table.k, game.map.x, game.map.y, pics.map.w, pics.map.h);
+        fillText("非常抱歉！对方的宝藏好没有藏在这里！", chatarea_w + (W - chatarea_w)/2 - 155, header_h + 80);
+    }
+    if (step == 'result' && round && result) {
+        draw_img(ob_k, table.k, game.map.x, game.map.y, pics.map.w, pics.map.h);
+        fillText("被看穿啦！我们藏的宝藏被对方找到了！", chatarea_w + (W - chatarea_w)/2 - 155, header_h + 80);
+    }
+    if (step == 'result' && round && !result) {
+        draw_img(ob_x, table.x, game.map.x, game.map.y, pics.map.w, pics.map.h);
+        fillText("瞒天过海！对方没有找到我们藏的宝藏！", chatarea_w + (W - chatarea_w)/2 - 155, header_h + 80);
+    }
+    if (open){
+        switch (open) {
+            case 1:
+                c.drawImage(pics.ob, pics.box_o.x, pics.box_o.y, pics.box_o.w, pics.box_o.h, game.box_1.x + 46, game.box_1.y - 50, pics.box_o.w, pics.box_o.h);
+                break;
+            case 2:
+                c.drawImage(pics.ob, pics.box_o.x, pics.box_o.y, pics.box_o.w, pics.box_o.h, game.box_2.x + 46, game.box_2.y - 50, pics.box_o.w, pics.box_o.h);
+                break;
+            case 3:
+                c.drawImage(pics.ob, pics.box_o.x, pics.box_o.y, pics.box_o.w, pics.box_o.h, game.box_3.x + 46, game.box_3.y - 50, pics.box_o.w, pics.box_o.h);
+                break;
+            default:
+                console.log(open);
+                break;
+        }
+    }
+    if (active_b) {
+        switch (active_b) {
+            case 1:
+                if (step == "hide" || step == "open") {
+                    c.drawImage(pics.ob, pics.box_a.x, pics.box_a.y, pics.box_a.w, pics.box_a.h, game.box_1.x, game.box_1.y, pics.box_a.w, pics.box_a.h);
+                }else {
+                    c.drawImage(pics.ob, pics.box_h.x, pics.box_h.y, pics.box_h.w, pics.box_h.h, game.box_1.x -110, game.box_1.y - 10, pics.box_h.w, pics.box_h.h);
+                }
+                c.drawImage(pics.ob, pics.box.x, pics.box.y, pics.box.w, pics.box.h, game.box_2.x, game.box_2.y, pics.box.w, pics.box.h);
+                c.drawImage(pics.ob, pics.box.x, pics.box.y, pics.box.w, pics.box.h, game.box_3.x, game.box_3.y, pics.box.w, pics.box.h);
+                break;
+            case 2:
+                c.drawImage(pics.ob, pics.box.x, pics.box.y, pics.box.w, pics.box.h, game.box_1.x, game.box_1.y, pics.box.w, pics.box.h);
+                if (step == "hide" || step == "open") {
+                    c.drawImage(pics.ob, pics.box_a.x, pics.box_a.y, pics.box_a.w, pics.box_a.h, game.box_2.x, game.box_2.y, pics.box_a.w, pics.box_a.h);
+                }else {
+                    c.drawImage(pics.ob, pics.box_h.x, pics.box_h.y, pics.box_h.w, pics.box_h.h, game.box_2.x -110, game.box_2.y - 10, pics.box_h.w, pics.box_h.h);
+                }
+                c.drawImage(pics.ob, pics.box.x, pics.box.y, pics.box.w, pics.box.h, game.box_3.x, game.box_3.y, pics.box.w, pics.box.h);
+                break;
+            case 3:
+                c.drawImage(pics.ob, pics.box.x, pics.box.y, pics.box.w, pics.box.h, game.box_1.x, game.box_1.y, pics.box.w, pics.box.h);
+                c.drawImage(pics.ob, pics.box.x, pics.box.y, pics.box.w, pics.box.h, game.box_2.x, game.box_2.y, pics.box.w, pics.box.h);
+                if (step == "hide" || step == "open") {
+                    c.drawImage(pics.ob, pics.box_a.x, pics.box_a.y, pics.box_a.w, pics.box_a.h, game.box_3.x, game.box_3.y, pics.box_a.w, pics.box_a.h);
+                }else {
+                    c.drawImage(pics.ob, pics.box_h.x, pics.box_h.y, pics.box_h.w, pics.box_h.h, game.box_3.x -110, game.box_3.y - 10, pics.box_h.w, pics.box_h.h);
+                }
+                break;
+            default:
+                console.log(active_b);
+                break;
+        }
+        return false;
+    }
+    c.drawImage(pics.ob, pics.box.x, pics.box.y, pics.box.w, pics.box.h, game.box_1.x, game.box_1.y, pics.box.w, pics.box.h);
+    c.drawImage(pics.ob, pics.box.x, pics.box.y, pics.box.w, pics.box.h, game.box_2.x, game.box_2.y, pics.box.w, pics.box.h);
+    c.drawImage(pics.ob, pics.box.x, pics.box.y, pics.box.w, pics.box.h, game.box_3.x, game.box_3.y, pics.box.w, pics.box.h);
+    <!-- c.drawImage(pics.ob, pics.box_a.x, pics.box_a.y, pics.box_a.w, pics.box_a.h, 800, 300, pics.box_a.w, pics.box_a.h); -->
+}
+function load_info() {
+    draw_img(info.img, "./uc_server/avatar.php?uid={$_G['uid']}&amp;size=small", (header_h - info.img_w)/2, (header_h - info.img_w)/2, info.img_w, info.img_w);
+    fillText(info.name, (header_h - info.img_w)/2 + info.img_w + 10, header_h/2);
+    fillText("博币：" + info.count, (header_h - info.img_w)/2 + info.img_w + 10, header_h - (header_h - info.img_w)/2, "#FFD700", "15px DejaVu Sans Mono");
+}
+function load_table(x, y, a) {
+    if (!room[a]) {
+        draw_img(table.tables[a].bench_l, table.bench_l_img, x, y + 50, table.w/4, 80);
+    }
+    draw_img(table.tables[a].table, table.table_img, x + table.w/4, y, table.w/2, 150);
+    if (!room[a]) {
+        draw_img(table.tables[a].bench_r, table.bench_r_img, x + table.w/4 + table.w/2, y + 50, table.w/4, 80);
+    }
+}
+function all_table(number) {
+    var x = chatarea_w, y = header_h;
+    for (i = 0; i < number; i++) {
+        if (i%3 == 0 && i != 0) {
+            x = chatarea_w;
+            y += table.h;
+        }
+        table.tables[i] = {};
+        table.tables[i].id = i;
+        <!-- table.tables[i].bench_l = null; -->
+        <!-- table.tables[i].table = null; -->
+        <!-- table.tables[i].bench_r = null; -->
+        load_table(x, y, i);
+        x += table.w;
+    }
+}
+function draw_img(object, src, x, y, w, h) {
+    object = new Image();
+    object.src = src;
+    object.onload = function () {
+        c.drawImage(object, x, y, w, h);
+    }
+}
+function fillLine(s, e, w, style) {
+    c.fillStyle = style || "white";
+    c.beginPath();
+    c.moveTo(s.x, s.y);
+    c.lineTo(e.x, e.y);
+    c.lineWidth = w;
+    c.strokeStyle = style;
+    c.stroke();
+}
+//绘制长方形(也就是控制板)
+function fillRect(x, y, w, h, style) {
+    c.fillStyle = style;
+    c.fillRect(x, y, w, h);
+}
+//绘制圆(也就是游戏中的球)
+function fillCircle(x, y, r, style) {
+    c.fillStyle = style;
+    c.beginPath();
+    c.arc(x, y, r, 0, Math.PI * 2);
+    c.fill();
+}
+//绘制文字(得分和显示输赢)
+function fillText(txt, x, y, style, font) {
+    c.fillStyle = style || "white";
+    c.font = font || "20px DejaVu Sans Mono";
+    c.fillText(txt, x, y);
+}
+function show_txt() {
+    fillRect(0, header_h, chatarea_w, H - header_h - 50, '#3f749e');
+    txt.forEach(function(item, index){
+        fillText(item, 10, header_h + 50 + index*20, "#ffe126", "15px DejaVu Sans Mono");
+    });
+}
+function onopen(){
+    let arr = {
+        sys:'token',
+        name:info.name,
+        uid:info.uid,
+        token:info.token
+    }
+    send(arr);
+}
+function received(msg){
+    var data = JSON.parse(msg);
+    if (data.sys == 'sys') {
+        if (data.code == 'wait') {
+            in_game = true;
+            isfirst = true;
+            round = true;
+            step = 'wait';
+            fillRect(chatarea_w, header_h, W - chatarea_w, H - header_h, '#000');
+            fillText('请稍等，您的对手正在路上~', chatarea_w + (W - chatarea_w)/2 - 80, header_h + (H - header_h)/2);
+        }
+        if (data.code == 'start') {
+            game_ui();
+            if (isfirst) {
+                step = 'hide';
+            }else {
+                step = 'wait_h';
+            }
+            var i = JSON.parse(data.msg);
+            i.users.forEach(function (item) {
+                if (item != info.name) {
+                    enemy = item;
+                }
+            });
+            bet = i.bet;
+            info.count = parseInt(info.count) - bet;
+            score.f = i.f;
+            score.l = i.l;
+            score.r = i.round;
+            fillRect(0, 0, W, header_h, '#00223b');
+            load_info();
+            game_refresh();
+        }
+        if (data.code == 'hide') {
+            if (!round) {
+                step = 'open';
+            }else {
+                step = 'wait_o';
+            }
+            game_refresh();
+        }
+        if (data.code == 'result') {
+            
+            step = 'result';
+            open = parseInt(data.msg.open);
+            active_b = parseInt(data.msg.hide);
+            if (data.msg.hide == data.msg.open) {
+                result = true;
+                if (score.r%2 == 0) {
+                    score.f += 1;
+                }else {
+                    score.l += 1;
+                }
+            }else {
+                if (score.r%2 == 0) {
+                    score.l += 1;
+                }else {
+                    score.f += 1;
+                }
+                result = false;
+            }
+            game_refresh();
+            setTimeout("next()", 3000);
+        }
+        if (data.code == 'noload'){
+            in_game = true;
+            fillRect(chatarea_w, header_h, W - chatarea_w, H - header_h, '#000');
+            fillText('博币不足' + data.msg + '，请先兑换！', chatarea_w + (W - chatarea_w)/2 - 80, header_h + (H - header_h)/2);
+        }
+        if (data.code == 'new') {
+            room = new Array();
+            for (var k in data.msg) {
+                if(!room[data.msg[k]]) {
+                   room[data.msg[k]] = new Array();
+                   room[data.msg[k]][0] = k;
+                }else {
+                   room[data.msg[k]][1] = k;
+                }
+            }
+            if (!in_game) {
+                reroom();
+            }
+        }
+        <!-- if (data.code == 'next') { -->
+            <!-- if (!round) { -->
+                <!-- round = true; -->
+                <!-- step = 'hide'; -->
+            <!-- }else { -->
+                <!-- round = false; -->
+                <!-- step = 'wait_h'; -->
+            <!-- } -->
+            <!-- open = null; -->
+            <!-- active_b = null; -->
+            <!-- game_refresh(); -->
+        <!-- } -->
+    }
+    if (data.sys == 'msg') {
+        if (data.code == 'all') {
+            for (i = 0; i < 26; i++){
+                txt[i] = txt[i+1];
+            }
+            txt[26] = data.msg;
+            show_txt();
+        }
+    }
+    if (data.sys == 'auth') {
+        if (data.code == 'erro') {
+            fillRect(chatarea_w, header_h, W - chatarea_w, H - header_h, '#000');
+            fillText('未知错误，请联系七哥~', chatarea_w + (W - chatarea_w)/2 - 80, header_h + (H - header_h)/2);
+            socket.close();
+        }
+        if (data.code == 'success') {
+            step = null;
+            ui();
+        }
+        if (data.code == 'reconn') {
+            game_ui();
+            isfirst = data.msg.isfirst == 'a'?true:false;
+            bet = data.msg.bet;
+            score.r = data.msg.round;
+            score.f = data.msg.score[0];
+            score.l = data.msg.score[1];
+            data.msg.users.forEach(function (item) {
+                if (item != info.name) {
+                    enemy = item;
+                }
+            });
+            if (data.msg.step == 'hide') {
+                if (isfirst) {
+                    if (score.r%2 != 0) {
+                        round = true;
+                        step = 'hide'; 
+                    }else {
+                        round = false;
+                        step = 'wait_h'; 
+                    }
+                }else {
+                    if (score.r%2 != 0) {
+                        round = false;
+                        step = 'wait_h'; 
+                    }else {
+                        round = true;
+                        step = 'hide'; 
+                    }
+                }
+            }else {
+                if (isfirst) {
+                    if (score.r%2 != 0) {
+                        round = true;
+                        step = 'wait_o'; 
+                    }else {
+                        round = false;
+                        step = 'open'; 
+                    }
+                }else {
+                    if (score.r%2 != 0) {
+                        round = false;
+                        step = 'open'; 
+                    }else {
+                        round = true;
+                        step = 'wait_o'; 
+                    }
+                }
+            }
+            game_refresh();
+        }
+    }
+}
+function newgame() {
+    score = {
+        f:1,
+        l:0,
+        r:3
+    }
+    bet = 0;
+    isfirst = false;
+    round = false;
+    active = null;
+    active_b = null;//活跃桌子
+    open = null;//选择的宝箱
+    in_game = false;//活跃宝箱
+    step //游戏进度 
+    open = null;
+    result = false;
+    ui();
+}
+function next() {
+    if (score.r >= 10 || Math.abs(score.l - score.f) > 10 - score.r) {
+        var win = false;
+        var f_img = null;
+        if (score.f == score.l){
+            fillRect(chatarea_w, header_h + 50, W - chatarea_w, H - header_h - 50, '#000');
+            draw_img(f_img, table.he, 490, 230, 439, 248);
+            setTimeout("newgame()", 3000);
+            return false;
+        }
+        if (isfirst && score.f > score.l) {
+            win = true;
+        }
+        if (!isfirst && score.f < score.l) {
+            win = true;
+        }
+        if (win) {
+            fillRect(chatarea_w, header_h + 50, W - chatarea_w, H - header_h - 50, '#000');
+            draw_img(f_img, table.win, 450, 150, 480, 425);
+            info.count = parseInt(info.count) + bet*2;
+        }else {
+            fillRect(chatarea_w, header_h + 50, W - chatarea_w, H - header_h - 50, '#000');
+            draw_img(f_img, table.lose, 450, 150, 480, 425);
+        }
+        setTimeout("newgame()", 3000);
+        return false;
+    }
+    score.r += 1;
+    open = null;
+    active_b = null;
+    round = round?false:true;
+    if (round){
+        step = 'hide';
+    }else {
+        step = 'wait_h';
+    }
+    game_refresh();
+}
+function diccon(){
+    fillRect(chatarea_w, header_h, W - chatarea_w, H - header_h, '#000');
+    fillText('掉线了，正在努力重连~', chatarea_w + (W - chatarea_w)/2 - 80, header_h + (H - header_h)/2);
+    step = 'reconn';
+    score = {
+        f:1,
+        l:0,
+        r:3
+    }
+    bet = 0;
+    isfirst = false;
+    round = false;
+    active = null;
+    active_b = null;//活跃桌子
+    open = null;//选择的宝箱
+    in_game = false;//活跃宝箱 
+    open = null;
+    result = false;
+    init();
+}
+</script>
+<!--{/block}-->
