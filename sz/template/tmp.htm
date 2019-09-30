@@ -1,0 +1,77 @@
+<!--{block return}-->
+<!--{template common/header}-->
+<script>
+<!--{if $_GET['mobile'] && $_GET['mobile'] == 'no'}-->
+var f = document.getElementById('nv_plugin');
+var z = document.getElementById('hd');
+var trans = true;
+f.removeChild(z);
+
+<!--{else}-->
+var trans = false;
+<!--{/if}-->
+</script>
+<canvas id="canvas">
+</canvas>
+  <h3>WebSocket v2.00</h3> 
+  <div id="log"></div>
+  <input id="sys" type="textbox" value="sys" />
+  <input id="msg" type="textbox" onkeypress="onkey(event)" /> 
+  <button onclick="send()">Send</button> 
+  <button onclick="auth()">Auth</button> 
+  <div>
+   Commands: hello, hi, name, age, date, time, thanks, bye
+  </div>  
+<script>
+var name = "{$_G['username']}";
+var uid = "{$_G['uid']}";
+var token = "{$token}";
+var socket;
+init();
+function init(){
+  var host = "ws://localhost:5555";
+  try{
+    socket = new WebSocket(host);
+    log('WebSocket - status '+socket.readyState);
+    socket.onopen    = function(msg){ log("Welcome - status "+this.readyState); };
+    socket.onmessage = function(msg){ log("Received: "+msg.data); };
+    socket.onclose   = function(msg){ log("Disconnected - status "+this.readyState); };
+  }
+  catch(ex){ log(ex); }
+  $("msg").focus();
+}
+
+function send(){
+  var txt,msg,sys,m;
+  txt = $("msg").value;
+  sys = $("sys").value;
+  m = {'sys':sys,"msg":txt};
+  msg = JSON.stringify(m);
+  if(!msg){ alert("Message can not be empty"); return; }
+  <!-- txt.value=""; -->
+  $("msg").focus();
+  try{ socket.send(msg); log('Sent: '+msg); } catch(ex){ log(ex); }
+}
+
+function auth(){
+  var msg,sys,m;
+  sys = 'login';
+  m = {'sys':sys,"name":name,"uid":uid,"token":token};
+  msg = JSON.stringify(m);
+  if(!msg){ alert("Message can not be empty"); return; }
+  <!-- txt.value=""; -->
+  $("msg").focus();
+  try{ socket.send(msg); log('Sent: '+msg); } catch(ex){ log(ex); }
+}
+
+function quit(){
+  log("Goodbye!");
+  socket.close();
+  socket=null;
+}
+// Utilities
+function $(id){ return document.getElementById(id); }
+function log(msg){ $("log").innerHTML+="<br>"+msg; }
+function onkey(event){ if(event.keyCode==13){ send(); } }
+</script> 
+<!--{/block}-->

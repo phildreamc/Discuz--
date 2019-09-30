@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+<title>TEST</title>
+<!-- <script src="CanvasInput.js"></script> -->
+<style>
+html, body {
+
+}
+</style>
+</head>
+<body>
+<canvas id="canvas">
+    您的浏览器不支持Canvas！请更换浏览器！
+</canvas>
+<script>
+var canvas = document.getElementById('canvas');
+var W = canvas.width = document.documentElement.clientWidth;
+var H = canvas.height = document.documentElement.clientHeight;
+var c = canvas.getContext("2d");
+fillRect(0, 0, W, H, '#000');
+
+//绘制长方形(也就是控制板)
+function fillRect(x, y, w, h, style) {
+    c.fillStyle = style;
+    c.fillRect(x, y, w, h);
+}
+<!-- var input = new CanvasInput({ -->
+  <!-- canvas: document.getElementById('canvas'), -->
+  <!-- fontSize: 18, -->
+  <!-- fontFamily: 'Arial', -->
+  <!-- fontColor: '#212121', -->
+  <!-- fontWeight: 'bold', -->
+  <!-- width: 300, -->
+  <!-- padding: 8, -->
+  <!-- borderWidth: 1, -->
+  <!-- borderColor: '#000', -->
+  <!-- borderRadius: 3, -->
+  <!-- boxShadow: '1px 1px 0px #fff', -->
+  <!-- innerShadow: '0px 0px 5px rgba(0, 0, 0, 0.5)', -->
+  <!-- placeHolder: 'Enter message here...' -->
+<!-- }); -->
+</script>
+</body>
+</html>
